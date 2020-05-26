@@ -1,2 +1,2 @@
-from holidaysapi import HolidaysApi
+from .holidaysapi import HolidaysApi
 
