@@ -187,7 +187,7 @@ class HolidaysApi:
 
         return df_calendar[cols]
 
-    def _categorize(column: pd.Series, min_days: int):
+    def _categorize(self, column: pd.Series, min_days: int):
 
         df_c = column.to_frame()
         df_c['wday'] = pd.to_datetime(column.index)
