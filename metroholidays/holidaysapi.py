@@ -165,6 +165,7 @@ class HolidaysApi:
         assert isinstance(date_to, dt.date)
 
         df = self.load_holidays(date_from, date_to)
+        df['date'] = pd.to_datetime(df['date'])
 
         if not countries:
             countries = list(df['country_code'].unique())
