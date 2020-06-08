@@ -151,8 +151,8 @@ class HolidaysApi:
         return holidays_df
 
     def load_calendar(self, date_from: dt.date, date_to: dt.date, countries: list=None, long_holidays=3) -> pd.DataFrame:
-        """Generate full daterange between date_from and date_to with days categorized 
-           into the following types:
+        """Generate full date range between date_from and date_to 
+           with days categorized into the following types:
            - Friday
            - Saturday
            - Sunday
@@ -167,11 +167,11 @@ class HolidaysApi:
         df = self.load_holidays(date_from, date_to)
 
         if not countries:
-            countries = df['country_code'].unique()
+            countries = list(df['country_code'].unique())
         
         dfp = pd.pivot_table(df, values='day_off', index=['date'],
                     columns=['country_code'], aggfunc=np.sum).reset_index()
-        dfp=dfp[['date']+countries]
+        dfp=dfp[['date'] + countries]
 
         df_calendar = pd.date_range(date_from, date_to, 
                             freq='D', name='date').to_frame().reset_index(drop=True)
