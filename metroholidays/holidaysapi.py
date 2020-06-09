@@ -172,7 +172,7 @@ class HolidaysApi:
         
         dfp = pd.pivot_table(df, values='day_off', index=['date'],
                     columns=['country_code'], aggfunc=np.max).reset_index()
-        dfp=dfp[['date'] + countries]
+        dfp=dfp[['date'] + countries].fillna(0).astype(np.int8)
 
         df_calendar = pd.date_range(date_from, date_to, 
                             freq='D', name='date').to_frame().reset_index(drop=True)
