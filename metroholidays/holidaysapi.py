@@ -172,21 +172,21 @@ class HolidaysApi:
         
         dfp = pd.pivot_table(df, values='day_off', index=['date'],
                     columns=['country_code'], aggfunc=np.max).reset_index()
-        dfp[countries] = dfp[countries].fillna(0).astype(np.int8)
         dfp=dfp[['date'] + countries]
 
         df_calendar = pd.date_range(date_from, date_to, 
                             freq='D', name='date').to_frame().reset_index(drop=True)
 
         df_calendar = pd.merge(df_calendar, dfp, on='date', how='left').set_index('date')
+        df_calendar[countries] = df_calendar[countries].fillna(0).astype(np.int8)
 
-        cols = countries.copy()
+        cols = []
         for country in countries:
             day_type_col = f'{country}_day_type'
             cols.append(day_type_col)
             df_calendar[day_type_col] = self._categorize(df_calendar[country], long_holidays)
 
-        return df_calendar[cols]
+        return df_calendar[cols + countries]
 
     def _categorize(self, column: pd.Series, min_days: int):
 
