@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
      name='metroholidays',
      version='0.11',
-     scripts=[] ,
+     scripts=[],
      author="Dmitry Vazhenin",
      author_email="dmitry.vazhenin@metroengines.jp",
      description="Python client module to access Metroengines Holidays API",

@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from assertpy import assert_that
 
-from utils.logging import logtime, logerror
+from .utils.logging import logtime, logerror
 
 logger = logging.getLogger(__name__)
 
