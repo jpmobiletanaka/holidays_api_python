@@ -9,7 +9,7 @@ import redo
 import pandas as pd
 from assertpy import assert_that
 
-from utils.logging import logtime, logerror
+from .logging import logtime, logerror
 
 logger = logging.getLogger(__name__)
 
@@ -136,8 +136,12 @@ class HolidaysApi:
         # todo: improve performance
         for holiday in holidays_raw:
             df_holidays_buf = pd.DataFrame(index=pd.MultiIndex.from_product([
-                [holiday['country_code']], [holiday['en_name']], holiday['dates']
-            ], names=['country_code', 'en_name', 'date'])).reset_index()
+                [holiday['country_code']], [holiday['en_name']],
+                [holiday['day_off']], [holiday['observed']],
+                [holiday['created_at']], [holiday['updated_at']], holiday['dates'],
+
+            ], names=['country_code', 'en_name', 'day_off', 'observed',
+                      'created_at', 'updated_at', 'date'])).reset_index()
 
             holidays_df = pd.concat([holidays_df, df_holidays_buf], ignore_index=True, sort=False)
 
