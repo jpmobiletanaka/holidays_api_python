@@ -7,10 +7,9 @@ import pickle
 
 import redo
 import pandas as pd
-import numpy as np
 from assertpy import assert_that
 
-from .utils.logging import logtime, logerror
+from utils.logging import logtime, logerror
 
 logger = logging.getLogger(__name__)
 
@@ -137,100 +136,14 @@ class HolidaysApi:
         # todo: improve performance
         for holiday in holidays_raw:
             df_holidays_buf = pd.DataFrame(index=pd.MultiIndex.from_product([
-                [holiday['country_code']], [holiday['en_name']],
-                [holiday['day_off']], [holiday['observed']],
-                [holiday['created_at']], [holiday['updated_at']], holiday['dates'],
-
-            ], names=['country_code', 'en_name', 'day_off', 'observed',
-                      'created_at', 'updated_at', 'date'])).reset_index()
+                [holiday['country_code']], [holiday['en_name']], holiday['dates']
+            ], names=['country_code', 'en_name', 'date'])).reset_index()
 
             holidays_df = pd.concat([holidays_df, df_holidays_buf], ignore_index=True, sort=False)
 
         logger.debug(holidays_df.head())  # todo: utils log df
         assert_that(holidays_df, 'Holidays df').is_not_none()
         return holidays_df
-
-    def load_calendar(self, date_from: dt.date, date_to: dt.date, countries: list=None, long_holidays=3) -> pd.DataFrame:
-        """Generate full date range between date_from and date_to 
-           with days categorized into the following types:
-           - Friday
-           - Saturday
-           - Sunday
-           - first_day (of long holidays)
-           - middle_days (of long holidays)
-           - last_day (of long holidays)           
-        """
-        
-        assert isinstance(date_from, dt.date)
-        assert isinstance(date_to, dt.date)
-
-        df = self.load_holidays(date_from, date_to)
-        df['date'] = pd.to_datetime(df['date'])
-
-        if not countries:
-            countries = list(df['country_code'].unique())
-        
-        dfp = pd.pivot_table(df, values='day_off', index=['date'],
-                    columns=['country_code'], aggfunc=np.max).reset_index()
-        dfp=dfp[['date'] + countries]
-
-        df_calendar = pd.date_range(date_from, date_to, 
-                            freq='D', name='date').to_frame().reset_index(drop=True)
-
-        df_calendar = pd.merge(df_calendar, dfp, on='date', how='left').set_index('date')
-        df_calendar[countries] = df_calendar[countries].fillna(0).astype(np.int8)
-
-        cols = []
-        for country in countries:
-            day_type_col = f'{country}_day_type'
-            cols.append(day_type_col)
-            df_calendar[day_type_col] = self._categorize(df_calendar[country], long_holidays)
-
-        return df_calendar[cols + countries]
-
-    def _categorize(self, column: pd.Series, min_days: int):
-
-        df_c = column.to_frame()
-        df_c['wday'] = pd.to_datetime(column.index)
-        df_c['wday'] = df_c['wday'].dt.weekday
-
-        df_c['type'] = 'others'
-        df_c.loc[df_c['wday']==4, 'type'] = 'Friday'
-        df_c.loc[df_c['wday']==5, 'type'] = 'Saturday'
-        df_c.loc[df_c['wday']==6, 'type'] = 'Sunday'
-        df_c['tmp'] = 0
-        df_c.loc[df_c['wday'].isin([5,6]), 'tmp'] = 1
-        df_c['tmp'] += column.fillna(0)
-
-        counts = df_c['tmp'].values
-        days = df_c['type'].values
-
-        last = int(counts[0])
-        for k in range(1, len(counts)):
-            v = counts[k]
-            if v > 0:
-                last = last + 1
-                counts[k] = last
-            else:
-                for j in range(1, last+1):
-                    counts[k-j] = last
-                last = 0
-
-        last = int(counts[0])
-        for k in range(1, len(counts)):
-            v = counts[k]
-            if v == 0:
-                if last >= min_days:
-                    days[k-1] = 'last_day'
-            elif v >= min_days:
-                if last == 0:
-                    days[k-1] = 'first_day'
-                days[k] = 'middle_days'
-
-            last = v
-
-        return days
-
 
     def _can_use_token(self):
         if not self._token_time:
