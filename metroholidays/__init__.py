@@ -44,7 +44,8 @@ class MetroHolidays:
         """Returns prepared API response as pandas df."""
         return self.api.load_holidays(date_from, date_to)
 
-    def load_calendar(self, date_from: dt.date, date_to: dt.date, countries: list=None, long_holidays=3) -> pd.DataFrame:
+    def load_calendar(self, date_from: dt.date, date_to: dt.date, 
+                      countries: list=None, long_holidays=3, weekends=False) -> pd.DataFrame:
         """Generate full date range between date_from and date_to 
            with days categorized into the following types:
            - Friday
