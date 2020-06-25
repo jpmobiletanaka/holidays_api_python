@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
      name='metroholidays',
-     version='0.11',
+     version='0.12',
      scripts=[],
      author="Dmitry Vazhenin",
      author_email="dmitry.vazhenin@metroengines.jp",
