@@ -72,8 +72,15 @@ class MetroHolidays:
         df_calendar = pd.date_range(date_from, date_to, 
                             freq='D', name='date').to_frame().reset_index(drop=True)
 
-        df_calendar = pd.merge(df_calendar, dfp, on='date', how='left').set_index('date')
+        df_calendar = pd.merge(df_calendar, dfp, on='date', how='left')
+        
+
+        if weekends:
+            df_calendar['wday'] = df_calendar['date'].dt.weekday
+            df_calendar.loc[df_calendar['wday'].isin([5,6]), countries] = 1
+
         df_calendar[countries] = df_calendar[countries].fillna(0).astype(np.int8)
+        df_calendar.set_index('date', inplace=True)
 
         cols = []
         for country in countries:
