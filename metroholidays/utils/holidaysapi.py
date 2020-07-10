@@ -132,18 +132,17 @@ class HolidaysApi:
         holidays_raw = self.load_holidays_raw(date_from, date_to)
         logger.debug('Holidays count: %s', len(holidays_raw))
 
-        holidays_df = None
-        # todo: improve performance
+        names = ['country_code', 'en_name', 'day_off', 'observed',
+                 'created_at', 'updated_at', 'date']
+
+        buffer = []
         for holiday in holidays_raw:
-            df_holidays_buf = pd.DataFrame(index=pd.MultiIndex.from_product([
-                [holiday['country_code']], [holiday['en_name']],
-                [holiday['day_off']], [holiday['observed']],
-                [holiday['created_at']], [holiday['updated_at']], holiday['dates'],
+            values = [holiday.get(i) for i in names]
+            for date in holiday['dates']:
+                values[-1] = date
+                buffer.append(tuple(values))
 
-            ], names=['country_code', 'en_name', 'day_off', 'observed',
-                      'created_at', 'updated_at', 'date'])).reset_index()
-
-            holidays_df = pd.concat([holidays_df, df_holidays_buf], ignore_index=True, sort=False)
+        holidays_df = pd.DataFrame(buffer, columns=names)
 
         logger.debug(holidays_df.head())  # todo: utils log df
         assert_that(holidays_df, 'Holidays df').is_not_none()
