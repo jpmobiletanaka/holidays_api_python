@@ -132,17 +132,18 @@ class HolidaysApi:
         holidays_raw = self.load_holidays_raw(date_from, date_to)
         logger.debug('Holidays count: %s', len(holidays_raw))
 
-        names = ['country_code', 'en_name', 'day_off', 'observed',
-                 'created_at', 'updated_at', 'date']
+        columns = ['country_code', 'en_name', 'day_off', 'observed',
+                   'created_at', 'updated_at']
 
         buffer = []
         for holiday in holidays_raw:
-            values = [holiday.get(i) for i in names]
-            for date in holiday['dates']:
-                values[-1] = date
-                buffer.append(tuple(values))
+            row = [holiday[col] for col in columns]
 
-        holidays_df = pd.DataFrame(buffer, columns=names)
+            # repeat row and put the date to the last column
+            for date in holiday['dates']:
+                buffer.append(tuple(row + [date]))
+
+        holidays_df = pd.DataFrame(buffer, columns=columns+['date'])
 
         logger.debug(holidays_df.head())  # todo: utils log df
         assert_that(holidays_df, 'Holidays df').is_not_none()

@@ -132,5 +132,3 @@ class MetroHolidays:
             last = v
 
         return days
-
-
