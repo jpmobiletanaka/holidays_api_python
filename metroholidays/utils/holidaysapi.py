@@ -20,18 +20,15 @@ class NotAuthException(Exception):
 
 class HolidaysApi:
     """Work with holidays API.
-
     api = HolidaysApi(conf.HOLIDAYS_API_URL, conf.HOLIDAYS_API_USER, conf.HOLIDAYS_API_PASSWORD)
     today = dt.date.today()
     holidays_df = api.load_holidays(
         date_from=dt.date(2015, 1, 1),
         date_to=today.replace(year=today.year + 1)
     )
-
     also you can use load_holidays_raw() to get holidays as is from API.
     and exec_json() to get another endpoint (it's necessary to use auth() in this case)
     but it's better to implement separate function if you want to use the endpoint.
-
     NOTE: class doesn't handle wrong/broken token file - you should remove it manually if this case.
     """
 
@@ -109,27 +106,37 @@ class HolidaysApi:
 
         return response.json()
 
-    def load_holidays_raw(self, date_from: dt.date, date_to: dt.date) -> t.List[dict]:
+    def load_holidays_raw(self, date_from: dt.date, date_to: dt.date,
+                          country_codes: t.Optional[t.List[str]] = None) -> t.List[dict]:
         """Returns API response json"""
         assert isinstance(date_from, dt.date)
         assert isinstance(date_to, dt.date)
         self.auth()
 
-        # result = self.exec_json('holidays', {'from': date_from.isoformat(), 'to': date_to.isoformat()})
+        params = {
+            'from': date_from.isoformat(),
+            'to': date_to.isoformat()
+        }
+        if country_codes:
+            assert isinstance(country_codes, list)
+            params['country_codes[]'] = country_codes  # no RFC about arrays, support PHP like arrays by this workaround
+            logger.debug('Countries filter: %s', country_codes)
+        # result = self.exec_json('holidays', params)
         # handle not auth
         result = redo.retry(
-            self.exec_json, args=('holidays', {'from': date_from.isoformat(), 'to': date_to.isoformat()}),
+            self.exec_json, args=('holidays', params),
             retry_exceptions=(NotAuthException,), cleanup=lambda: self.auth(force=True)
         )
 
         return result
 
-    def load_holidays(self, date_from: dt.date, date_to: dt.date) -> pd.DataFrame:
+    def load_holidays(self, date_from: dt.date, date_to: dt.date,
+                      country_codes: t.Optional[t.List[str]] = None) -> pd.DataFrame:
         """Returns prepared API response as pandas df."""
         assert isinstance(date_from, dt.date)
         assert isinstance(date_to, dt.date)
 
-        holidays_raw = self.load_holidays_raw(date_from, date_to)
+        holidays_raw = self.load_holidays_raw(date_from, date_to, country_codes)
         logger.debug('Holidays count: %s', len(holidays_raw))
 
         columns = ['country_code', 'en_name', 'day_off', 'observed',
