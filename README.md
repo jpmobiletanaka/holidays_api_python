@@ -29,7 +29,7 @@ import pandas as pd
 from metroholidays import MetroHolidays
 
 mh = MetroHolidays(
-    url='http://holidays.revenue.metroengines.jp/api/v1/',
+    url='https://holidays.metroengines.jp/api/v1/',
     user='user',
     pwd='*****'
 )
